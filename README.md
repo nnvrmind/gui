@@ -126,7 +126,7 @@ conda env remove -n gui
 Для первоначального заполнения таблицы создайте набор из 500 вымышленных пациентов:
 
 ```python 
-python patient_records/generate_test_data.py
+python patient_records/generate_data.py
 ```
 
 Генератор создаст `patient_records/patients.json`.
