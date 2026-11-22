@@ -1,5 +1,5 @@
 # GUI
-customtkinter
+customtkinter==6.0.0
 
 # Графики
 matplotlib
