@@ -1,0 +1,9 @@
+# GUI
+customtkinter
+
+# Графики
+matplotlib
+Pillow
+
+# Генерация тестовых данных
+Faker
