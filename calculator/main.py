@@ -13,6 +13,7 @@ WINDOW_SIZE = "480x620" if IS_LINUX else "350x480"
 FRAME_WIDTH = 440 if IS_LINUX else 320
 FRAME_HEIGHT = 460 if IS_LINUX else 400
 
+
 class Calculator:
     """
     Графический калькулятор на основе CustomTkinter.
@@ -121,7 +122,11 @@ class Calculator:
                     text=button,
                     width=65,
                     height=65,
-                    corner_radius=24 if button in ["⌫", "AC", "²√x"] else 28,
+                    corner_radius=(
+                        (28 if button in ["⌫", "AC", "²√x"] else 34) 
+                        if IS_LINUX 
+                        else (24 if button in ["⌫", "AC", "²√x"] else 28)
+                    ),
                     fg_color=color,
                     hover=False,
                     text_color=TEXT_COLOR,
