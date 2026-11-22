@@ -8,6 +8,11 @@ UTILITY_COLOR = "#A88498" # служебные кнопки
 OPERATION_COLOR = "#E8A3BD" # арифметические операции
 TEXT_COLOR = "#FFFFFF" # текст
 
+IS_LINUX = sys.platform.startswith("linux")
+WINDOW_SIZE = "480x620" if IS_LINUX else "350x480"
+FRAME_WIDTH = 440 if IS_LINUX else 320
+FRAME_HEIGHT = 460 if IS_LINUX else 400
+
 class Calculator:
     """
     Графический калькулятор на основе CustomTkinter.
@@ -37,7 +42,7 @@ class Calculator:
         """
         self.root = root
         self.root.title("Калькулятор")
-        self.root.geometry("480x620")
+        self.root.geometry(WINDOW_SIZE)
         self.root.resizable(False, False)
         self.root.configure(fg_color=BG_COLOR)
 
@@ -67,8 +72,8 @@ class Calculator:
         # создание сетки из 4 столбцов и 5 строк
         self.buttons_frame = ctk.CTkFrame(
             self.root,
-            width=440,
-            height=460,
+            width=FRAME_WIDTH,
+            height=FRAME_HEIGHT,
             fg_color="transparent"
         )
 
@@ -276,11 +281,10 @@ def main() -> None:
     """Создаёт главное окно и запускает калькулятор."""
     ctk.set_appearance_mode("dark")
 
-    if sys.platform.startswith("linux"):
+    if IS_LINUX:
         ctk.DrawEngine.preferred_drawing_method = "circle_shapes"
-
-    ctk.set_widget_scaling(1.0)
-    ctk.set_window_scaling(1.0)
+        ctk.set_widget_scaling(1.0)
+        ctk.set_window_scaling(1.0)
 
     root = ctk.CTk() # создание главного окна
     Calculator(root)
