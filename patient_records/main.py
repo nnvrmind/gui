@@ -115,9 +115,9 @@ class PatientApp:
 
         buttons = [
             ("+ Добавить пациента", ACCENT_COLOR),
-            ("Редактировать", "#E5F3F8", "#D4EAF2"),
-            ("Статистика", "#E5F3F8", "#D4EAF2"),
-            ("Удалить", "#FCECED", "#F5D5D8")
+            ("Редактировать", "#E5F3F8"),
+            ("Статистика", "#E5F3F8"),
+            ("Удалить", "#FCECED")
         ]
 
         for column, (text, color) in enumerate(buttons):
