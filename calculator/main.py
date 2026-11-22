@@ -36,7 +36,7 @@ class Calculator:
         """
         self.root = root
         self.root.title("Калькулятор")
-        self.root.geometry("350x480")
+        self.root.geometry("480x620")
         self.root.resizable(False, False)
         self.root.configure(fg_color=BG_COLOR)
 
@@ -66,12 +66,12 @@ class Calculator:
         # создание сетки из 4 столбцов и 5 строк
         self.buttons_frame = ctk.CTkFrame(
             self.root,
-            width=320,
-            height=400,
+            width=440,
+            height=460,
             fg_color="transparent"
         )
 
-        self.buttons_frame.pack(pady=10)
+        self.buttons_frame.pack(pady=(0, 15))
         self.buttons_frame.grid_propagate(False)
 
         for column in range(4):
@@ -274,6 +274,9 @@ class Calculator:
 def main() -> None:
     """Создаёт главное окно и запускает калькулятор."""
     ctk.set_appearance_mode("dark")
+
+    ctk.DrawEngine.preferred_drawing_method = "circle_shapes"
+
     root = ctk.CTk() # создание главного окна
     Calculator(root)
     root.mainloop()
