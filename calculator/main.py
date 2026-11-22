@@ -1,3 +1,4 @@
+import sys
 import customtkinter as ctk
 from evaluator import evaluate
 
@@ -275,7 +276,11 @@ def main() -> None:
     """Создаёт главное окно и запускает калькулятор."""
     ctk.set_appearance_mode("dark")
 
-    ctk.DrawEngine.preferred_drawing_method = "circle_shapes"
+    if sys.platform.startswith("linux"):
+        ctk.DrawEngine.preferred_drawing_method = "circle_shapes"
+
+    ctk.set_widget_scaling(1.0)
+    ctk.set_window_scaling(1.0)
 
     root = ctk.CTk() # создание главного окна
     Calculator(root)
