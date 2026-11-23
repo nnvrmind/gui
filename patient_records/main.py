@@ -1,3 +1,4 @@
+import sys
 import customtkinter as ctk
 from tkinter import ttk
 import math
@@ -11,6 +12,7 @@ from PIL import Image
 from patient import Patient
 from statistics_charts import create_statistics_figure
 
+IS_LINUX = sys.platform.startswith("linux")
 
 BG_COLOR = "#F5F8FC"
 TEXT_COLOR = "#253746"
@@ -124,13 +126,13 @@ class PatientApp:
             button = ctk.CTkButton(
                 toolbar,
                 text=text,
-                width=190,
-                height=42,
-                corner_radius=10,
+                width=220 if IS_LINUX else 190,
+                height=52 if IS_LINUX else 42,
+                corner_radius=14 if IS_LINUX else 10,
                 fg_color=color,
                 hover=False,
                 text_color="#FFFFFF" if column == 0 else TEXT_COLOR,
-                font=("Arial", 16)
+                font=("Arial", 18 if IS_LINUX else 16)
             )
             button.grid(
                 row=0,
@@ -247,8 +249,8 @@ class PatientApp:
 
             self.table.column(
                 column,
-                width=280 if column == "name" else 100,
-                minwidth=230 if column == "name" else 70,
+                width=(350 if IS_LINUX else 280) if column == "name" else 100,
+                minwidth=(300 if IS_LINUX else 230) if column == "name" else 70,
                 anchor="center",
                 stretch=True
             )
@@ -366,7 +368,9 @@ class PatientApp:
         self.form_window.title(
             "Редактирование пациента" if is_editing else "Добавление пациента"
         )
-        self.form_window.geometry("450x630")
+        self.form_window.geometry(
+            "700x680" if IS_LINUX else "450x630"
+        )
         self.form_window.resizable(False, False)
         self.form_window.configure(fg_color=BG_COLOR)
 
@@ -481,12 +485,17 @@ class PatientApp:
             sticky="ew"
         )
 
-        buttons_frame.grid_columnconfigure((0, 1), weight=1)
+        buttons_frame.grid_columnconfigure(
+            (0, 1), 
+            weight=1, 
+            uniform="buttons"
+        )
 
         cancel_button = ctk.CTkButton(
             buttons_frame,
             text="Отмена",
             height=44,
+            corner_radius=14 if IS_LINUX else 10,
             font=("Arial", 16),
             fg_color="#E5F3F8",
             hover_color="#D4EAF2",
@@ -504,6 +513,7 @@ class PatientApp:
             buttons_frame,
             text="Сохранить",
             height=44,
+            corner_radius=14 if IS_LINUX else 10,
             font=("Arial", 16),
             fg_color=ACCENT_COLOR,
             hover_color=HOVER_COLOR,
@@ -777,6 +787,26 @@ class PatientApp:
             pady=(0, 20)
         )
 
+        def resize_charts(event) -> None:
+            if event.widget is not window:
+                return
+
+            available_width = max(1, event.width - 60)
+            available_height = max(1, event.height - 230)
+
+            aspect_ratio = image.width / image.height
+
+            new_width = min(
+                available_width,
+                int(available_height * aspect_ratio)
+            )
+            new_height = int(new_width / aspect_ratio)
+
+            chart_image.configure(size=(new_width, new_height))
+
+
+        window.bind("<Configure>", resize_charts)
+
     def delete_selected_patient(self) -> None:
         """
         Удаляет выбранных пациентов после подтверждения пользователя.
@@ -965,6 +995,9 @@ def main() -> None:
     """
     # установка светлой темы независимо от системной
     ctk.set_appearance_mode("light")
+
+    if sys.platform.startswith("linux"):
+        ctk.DrawEngine.preferred_drawing_method = "circle_shapes"
 
     root = ctk.CTk()
     PatientApp(root)
