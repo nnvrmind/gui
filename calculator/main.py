@@ -9,9 +9,9 @@ OPERATION_COLOR = "#E8A3BD" # арифметические операции
 TEXT_COLOR = "#FFFFFF" # текст
 
 IS_LINUX = sys.platform.startswith("linux")
-WINDOW_SIZE = "480x620" if IS_LINUX else "350x480"
-FRAME_WIDTH = 440 if IS_LINUX else 320
-FRAME_HEIGHT = 460 if IS_LINUX else 400
+WINDOW_SIZE = "380x480" if IS_LINUX else "350x480"
+FRAME_WIDTH = 360 if IS_LINUX else 320
+FRAME_HEIGHT = 370 if IS_LINUX else 400
 
 
 class Calculator:
@@ -105,15 +105,15 @@ class Calculator:
         for row, button_row in enumerate(buttons):
             for column, button in enumerate(button_row):
                 if button in ["÷", "×", "−", "+", "="]:
-                    button_font = ("Arial", 20)
+                    button_font = ("Arial", 30 if IS_LINUX else 20)
                     color = OPERATION_COLOR
 
                 elif button in ["⌫", "AC", "²√x"]:
-                    button_font = ("Arial", 16)
+                    button_font = ("Arial", 18 if IS_LINUX else 20)
                     color = UTILITY_COLOR
 
                 else:
-                    button_font = ("Arial", 20)
+                    button_font = ("Arial", 30 if IS_LINUX else 20)
                     color = DIGIT_COLOR
 
 
@@ -123,7 +123,7 @@ class Calculator:
                     width=65,
                     height=65,
                     corner_radius=(
-                        (28 if button in ["⌫", "AC", "²√x"] else 34) 
+                        (26 if button in ["⌫", "AC", "²√x"] else 34) 
                         if IS_LINUX 
                         else (24 if button in ["⌫", "AC", "²√x"] else 28)
                     ),
@@ -288,8 +288,6 @@ def main() -> None:
 
     if IS_LINUX:
         ctk.DrawEngine.preferred_drawing_method = "circle_shapes"
-        ctk.set_widget_scaling(1.0)
-        ctk.set_window_scaling(1.0)
 
     root = ctk.CTk() # создание главного окна
     Calculator(root)
