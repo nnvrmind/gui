@@ -109,7 +109,7 @@ class Calculator:
                     color = OPERATION_COLOR
 
                 elif button in ["⌫", "AC", "²√x"]:
-                    button_font = ("Arial", 18 if IS_LINUX else 20)
+                    button_font = ("Arial", 18 if IS_LINUX else 16)
                     color = UTILITY_COLOR
 
                 else:
