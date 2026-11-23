@@ -1,3 +1,4 @@
+import sys
 from collections import Counter
 from io import BytesIO
 from pathlib import Path
@@ -499,13 +500,13 @@ class FastQCApp:
         figure.savefig(buffer, format="png", dpi=150)
         buffer.seek(0)
 
-        image = Image.open(buffer).copy()
+        self.chart_source_image = Image.open(buffer).copy()
         buffer.close()
         figure.clear()
 
         self.chart_image = ctk.CTkImage(
-            light_image=image,
-            dark_image=image,
+            light_image=self.chart_source_image,
+            dark_image=self.chart_source_image,
             size=(1000, 700)
         )
 
@@ -513,6 +514,48 @@ class FastQCApp:
             text="",
             image=self.chart_image
         )
+
+        def resize_charts(event=None) -> None:
+            """
+            Масштабирует изображение с графиками при изменении размера окна.
+
+            Сохраняет исходные пропорции изображения и подбирает
+            максимальный размер графиков с учётом доступной области.
+
+            Parameters
+            ----------
+            event : tkinter.Event, optional
+                Событие изменения размеров окна. Если не передано,
+                используются текущие размеры окна.
+            """
+            if event is not None and event.widget is not self.root:
+                return
+                
+            if self.chart_source_image is None or self.chart_image is None:
+                return
+
+            available_width = self.root.winfo_width() - 60
+            available_height = self.root.winfo_height() - 260
+
+            if available_width < 500 or available_height < 350:
+                return
+
+            aspect_ratio = (
+                self.chart_source_image.width
+                / self.chart_source_image.height
+            )
+
+            new_width = min(
+                available_width,
+                int(available_height * aspect_ratio)
+            )
+            new_height = int(new_width / aspect_ratio)
+
+            if new_width > 0 and new_height > 0:
+                self.chart_image.configure(size=(new_width, new_height))
+
+        self.root.bind("<Configure>", resize_charts)
+        self.root.after_idle(resize_charts)
 
         self.status_label.configure(
             text="Анализ FASTQ-файла завершён."
@@ -522,6 +565,9 @@ class FastQCApp:
 def main() -> None:
     """Создаёт главное окно и запускает Mini FastQC."""
     ctk.set_appearance_mode("light")
+
+    if sys.platform.startswith("linux"):
+        ctk.DrawEngine.preferred_drawing_method = "circle_shapes"
 
     root = ctk.CTk()
     FastQCApp(root)
