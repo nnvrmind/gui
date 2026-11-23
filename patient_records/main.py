@@ -791,19 +791,24 @@ class PatientApp:
             if event.widget is not window:
                 return
 
-            available_width = max(1, event.width - 60)
-            available_height = max(1, event.height - 230)
+            available_width = event.width - 60
+            available_height = event.height - 230
+
+            # Не изменяем изображение, пока окно слишком маленькое
+            if available_width < 500 or available_height < 350:
+                return
 
             aspect_ratio = image.width / image.height
 
             new_width = min(
                 available_width,
-                int(available_height * aspect_ratio)
+                int(available_height * aspect_ratio),
+                1600
             )
             new_height = int(new_width / aspect_ratio)
 
-            chart_image.configure(size=(new_width, new_height))
-
+            if new_width > 0 and new_height > 0:
+                chart_image.configure(size=(new_width, new_height))
 
         window.bind("<Configure>", resize_charts)
 
