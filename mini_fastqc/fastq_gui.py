@@ -304,6 +304,7 @@ class FastQCApp:
             fg_color=ACCENT_COLOR,
             hover=False,
             font=("Arial", 16),
+            text_color="#FFFFFF",
             command=self.select_file
         )
         self.select_button.pack(side="left", padx=20, pady=20)
