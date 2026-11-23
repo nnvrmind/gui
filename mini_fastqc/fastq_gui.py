@@ -365,7 +365,7 @@ class FastQCApp:
                 text=title,
                 font=("Arial", 13),
                 text_color=SECONDARY_TEXT_COLOR
-            ).pack(pady=(10, 3))
+            ).pack(side="left", padx=(20, 10), pady=12)
 
             value_label = ctk.CTkLabel(
                 card,
@@ -373,7 +373,7 @@ class FastQCApp:
                 font=("Arial", 23, "bold"),
                 text_color=TEXT_COLOR
             )
-            value_label.pack(pady=(0, 10))
+            value_label.pack(side="right", padx=(10, 20), pady=12)
 
             self.summary_labels[key] = value_label
 
