@@ -294,7 +294,7 @@ class FastQCApp:
             fg_color=CARD_COLOR,
             corner_radius=15
         )
-        file_frame.pack(fill="x", pady=(0, 15))
+        file_frame.pack(fill="x", pady=(0, 10))
 
         self.select_button = ctk.CTkButton(
             file_frame,
@@ -308,7 +308,7 @@ class FastQCApp:
             text_color="#FFFFFF",
             command=self.select_file
         )
-        self.select_button.pack(side="left", padx=20, pady=20)
+        self.select_button.pack(side="left", padx=20, pady=10)
 
         self.file_label = ctk.CTkLabel(
             file_frame,
@@ -330,13 +330,13 @@ class FastQCApp:
             font=("Arial", 15),
             text_color=SECONDARY_TEXT_COLOR
         )
-        self.status_label.pack(anchor="w", pady=(0, 15))
+        self.status_label.pack(anchor="w", pady=(0, 10))
 
         self.summary_frame = ctk.CTkFrame(
             self.content,
             fg_color="transparent"
         )
-        self.summary_frame.pack(fill="x", pady=(0, 15))
+        self.summary_frame.pack(fill="x", pady=(0, 10))
 
         self.summary_labels = {}
 
@@ -365,7 +365,7 @@ class FastQCApp:
                 text=title,
                 font=("Arial", 13),
                 text_color=SECONDARY_TEXT_COLOR
-            ).pack(pady=(16, 5))
+            ).pack(pady=(10, 3))
 
             value_label = ctk.CTkLabel(
                 card,
@@ -373,7 +373,7 @@ class FastQCApp:
                 font=("Arial", 23, "bold"),
                 text_color=TEXT_COLOR
             )
-            value_label.pack(pady=(0, 16))
+            value_label.pack(pady=(0, 10))
 
             self.summary_labels[key] = value_label
 
@@ -412,11 +412,11 @@ class FastQCApp:
         self.select_button.configure(state="disabled")
         self.status_label.configure(text="Анализ файла выполняется...")
 
+        self.chart_label.configure(image=None)
+        self.chart_label.configure(text="Анализ данных...")
+
         self.chart_image = None
-        self.chart_label.configure(
-            text="Анализ данных...",
-            image=None
-        )
+        self.chart_source_image = None
 
         for label in self.summary_labels.values():
             label.configure(text="—")
@@ -510,10 +510,8 @@ class FastQCApp:
             size=(1000, 700)
         )
 
-        self.chart_label.configure(
-            text="",
-            image=self.chart_image
-        )
+        self.chart_label.configure(image=self.chart_image)
+        self.chart_label.configure(text="")
 
         def resize_charts(event=None) -> None:
             """
@@ -535,10 +533,16 @@ class FastQCApp:
                 return
 
             available_width = self.root.winfo_width() - 60
-            available_height = self.root.winfo_height() - 260
 
-            if available_width < 500 or available_height < 350:
-                return
+            chart_top = (
+                    self.chart_label.winfo_rooty()
+                    - self.root.winfo_rooty()
+            )
+
+            available_height = self.root.winfo_height() - chart_top - 45
+
+            available_width = max(650, available_width)
+            available_height = max(450, available_height)
 
             aspect_ratio = (
                 self.chart_source_image.width
