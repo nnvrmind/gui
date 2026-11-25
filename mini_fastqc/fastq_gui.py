@@ -34,8 +34,7 @@ def analyze_fastq(filepath: Path) -> dict:
 
     Последовательно считывает записи с помощью FastqReader.
     Рассчитывает количество и длины прочтений, качество и
-    нуклеотидный состав по позициям, а также распределение
-    среднего качества отдельных прочтений.
+    нуклеотидный состав по позициям.
 
     Parameters
     ----------
@@ -60,7 +59,6 @@ def analyze_fastq(filepath: Path) -> dict:
     total_bases = 0
 
     length_counts = Counter()
-    mean_quality_counts = Counter()
 
     quality_sums = []
     quality_counts = []
@@ -75,8 +73,6 @@ def analyze_fastq(filepath: Path) -> dict:
         total_bases += length
         length_counts[length] += 1
 
-        read_quality = 0
-
         for position, character in enumerate(record.quality):
             ascii_code = ord(character)
 
@@ -87,8 +83,6 @@ def analyze_fastq(filepath: Path) -> dict:
                 )
 
             score = ascii_code - 33
-
-            read_quality += score
 
             if position == len(quality_sums):
                 quality_sums.append(0)
@@ -106,9 +100,6 @@ def analyze_fastq(filepath: Path) -> dict:
 
             if nucleotide in base_counts:
                 base_counts[nucleotide][position] += 1
-
-        mean_score = read_quality / length
-        mean_quality_counts[int(mean_score)] += 1
 
     if total_reads == 0:
         raise ValueError("FASTQ-файл не содержит прочтений.")
@@ -133,93 +124,95 @@ def analyze_fastq(filepath: Path) -> dict:
         "total_reads": total_reads,
         "average_length": total_bases / total_reads,
         "length_counts": length_counts,
-        "mean_quality_counts": mean_quality_counts,
         "average_quality_by_position": average_quality,
         "base_percentages": base_percentages,
     }
 
 
-def create_statistics_figure(statistics: dict) -> Figure:
+def create_statistics_figure(
+    statistics: dict,
+    chart_index: int
+) -> Figure:
     """
-    Создаёт фигуру с четырьмя графиками статистики FASTQ.
+    Создаёт выбранный статистический график FASTQ.
 
     Parameters
     ----------
     statistics : dict
-        Результаты анализа, полученные функцией analyze_fastq().
+        Результаты анализа FASTQ-файла.
+    chart_index : int
+        Индекс графика от 0 до 2.
 
     Returns
     -------
     matplotlib.figure.Figure
-        Фигура с графиками качества, нуклеотидного состава,
-        распределения длин и среднего качества прочтений.
+        Фигура с выбранным графиком.
     """
-    figure = Figure(figsize=(10, 7), dpi=150)
-    axes = figure.subplots(2, 2)
+    figure = Figure(figsize=(10, 5.5), dpi=150)
+    ax = figure.add_subplot(111)
 
-    quality = statistics["average_quality_by_position"]
-    positions = range(1, len(quality) + 1)
+    if chart_index == 0:
+        quality = statistics["average_quality_by_position"]
+        positions = range(1, len(quality) + 1)
 
-    ax = axes[0, 0]
-    ax.plot(positions, quality, color=ACCENT_COLOR, linewidth=1.6)
-    ax.set_title("Среднее качество по позициям")
-    ax.set_xlabel("Позиция в прочтении")
-    ax.set_ylabel("Phred score")
-
-    ax = axes[0, 1]
-
-    for base, percentages in statistics["base_percentages"].items():
         ax.plot(
             positions,
-            percentages,
-            color=BASE_COLORS[base],
-            linewidth=1.5,
-            label=base
+            quality,
+            color=ACCENT_COLOR,
+            linewidth=1.6
         )
+        ax.set_title("Среднее качество по позициям")
+        ax.set_xlabel("Позиция в прочтении")
+        ax.set_ylabel("Phred score")
 
-    ax.set_title("Нуклеотидный состав по позициям")
-    ax.set_xlabel("Позиция в прочтении")
-    ax.set_ylabel("Содержание, %")
-    ax.set_ylim(0, 100)
-    ax.legend(fontsize=9)
+    elif chart_index == 1:
+        quality = statistics["average_quality_by_position"]
+        positions = range(1, len(quality) + 1)
 
-    ax = axes[1, 0]
-    lengths = sorted(statistics["length_counts"])
-    counts = [statistics["length_counts"][length] for length in lengths]
+        for base, percentages in statistics["base_percentages"].items():
+            ax.plot(
+                positions,
+                percentages,
+                color=BASE_COLORS[base],
+                linewidth=1.5,
+                label=base
+            )
 
-    ax.bar(lengths, counts, color="#78B7D0", width=0.8)
-    ax.set_title("Распределение длин прочтений")
-    ax.set_xlabel("Длина, п. н.")
-    ax.set_ylabel("Количество прочтений")
-    ax.yaxis.set_major_locator(MaxNLocator(integer=True))
+        ax.set_title("Нуклеотидный состав по позициям")
+        ax.set_xlabel("Позиция в прочтении")
+        ax.set_ylabel("Содержание, %")
+        ax.set_ylim(0, 100)
+        ax.legend(fontsize=10)
 
-    ax = axes[1, 1]
-    quality_scores = sorted(statistics["mean_quality_counts"])
-    quality_amounts = [
-        statistics["mean_quality_counts"][score]
-        for score in quality_scores
-    ]
+    elif chart_index == 2:
+        lengths = sorted(statistics["length_counts"])
+        counts = [
+            statistics["length_counts"][length]
+            for length in lengths
+        ]
 
-    ax.bar(
-        quality_scores,
-        quality_amounts,
-        color="#E9A7C0",
-        width=0.85
-    )
-    ax.set_title("Распределение среднего качества")
-    ax.set_xlabel("Средний Phred score (целая часть)")
-    ax.set_ylabel("Количество прочтений")
-    ax.yaxis.set_major_locator(MaxNLocator(integer=True))
+        ax.bar(
+            lengths,
+            counts,
+            color="#78B7D0",
+            width=0.8
+        )
+        ax.set_title("Распределение длин прочтений")
+        ax.set_xlabel("Длина, п. н.")
+        ax.set_ylabel("Количество прочтений")
+        ax.yaxis.set_major_locator(MaxNLocator(integer=True))
 
-    for ax in axes.flat:
-        ax.set_facecolor("#F5FAFC")
-        ax.spines["top"].set_visible(False)
-        ax.spines["right"].set_visible(False)
-        ax.grid(axis="y", alpha=0.2)
-        ax.set_axisbelow(True)
-        ax.title.set_fontsize(11)
-        ax.title.set_fontweight("bold")
-        ax.tick_params(labelsize=9)
+    else:
+        raise ValueError("Недопустимый индекс графика")
+
+    ax.set_facecolor("#F5FAFC")
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.grid(axis="y", alpha=0.2)
+    ax.set_axisbelow(True)
+    ax.title.set_fontsize(13)
+    ax.title.set_fontweight("bold")
+    ax.tick_params(labelsize=10)
 
     figure.patch.set_facecolor(CARD_COLOR)
     figure.tight_layout(pad=2.8)
@@ -263,13 +256,18 @@ class FastQCApp:
         self.selected_file: Path | None = None
         self.result_queue = Queue()
         self.chart_image = None
+        self.chart_source_image = None
+        self.chart_images = []
+        self.current_chart_index = 0
         self.analyzing = False
 
         self.create_widgets()
 
+        self.root.bind("<Configure>", self.resize_charts)
+
     def create_widgets(self) -> None:
         """Создаёт основные элементы графического интерфейса."""
-        self.content = ctk.CTkScrollableFrame(
+        self.content = ctk.CTkFrame(
             self.root,
             fg_color="transparent"
         )
@@ -383,7 +381,52 @@ class FastQCApp:
             font=("Arial", 16),
             text_color=SECONDARY_TEXT_COLOR
         )
-        self.chart_label.pack(fill="x", pady=(10, 20))
+
+        self.chart_label.pack(
+            fill="both",
+            expand=True,
+            pady=(10, 10)
+        )
+
+        navigation_frame = ctk.CTkFrame(
+            self.content,
+            fg_color="transparent"
+        )
+        navigation_frame.pack(pady=(0, 10))
+
+        self.previous_button = ctk.CTkButton(
+            navigation_frame,
+            text="← Назад",
+            width=120,
+            height=40,
+            fg_color=ACCENT_COLOR,
+            text_color="#FFFFFF",
+            hover=False,
+            state="disabled",
+            command=lambda: self.change_chart(-1)
+        )
+        self.previous_button.pack(side="left", padx=10)
+
+        self.chart_counter = ctk.CTkLabel(
+            navigation_frame,
+            text="0 / 3",
+            font=("Arial", 15),
+            text_color=TEXT_COLOR
+        )
+        self.chart_counter.pack(side="left", padx=15)
+
+        self.next_button = ctk.CTkButton(
+            navigation_frame,
+            text="Далее →",
+            width=120,
+            height=40,
+            fg_color=ACCENT_COLOR,
+            text_color="#FFFFFF",
+            hover=False,
+            state="disabled",
+            command=lambda: self.change_chart(1)
+        )
+        self.next_button.pack(side="left", padx=10)
 
     def select_file(self) -> None:
         """Открывает диалог выбора FASTQ-файла и запускает анализ."""
@@ -417,6 +460,12 @@ class FastQCApp:
 
         self.chart_image = None
         self.chart_source_image = None
+        self.chart_images = []
+        self.current_chart_index = 0
+
+        self.chart_counter.configure(text="0 / 3")
+        self.previous_button.configure(state="disabled")
+        self.next_button.configure(state="disabled")
 
         for label in self.summary_labels.values():
             label.configure(text="—")
@@ -494,75 +543,131 @@ class FastQCApp:
         for key, value in values.items():
             self.summary_labels[key].configure(text=value)
 
-        figure = create_statistics_figure(statistics)
+        self.chart_images = []
 
-        buffer = BytesIO()
-        figure.savefig(buffer, format="png", dpi=150)
-        buffer.seek(0)
+        for index in range(3):
+            figure = create_statistics_figure(statistics, index)
 
-        self.chart_source_image = Image.open(buffer).copy()
-        buffer.close()
-        figure.clear()
+            buffer = BytesIO()
+            figure.savefig(buffer, format="png", dpi=150)
+            buffer.seek(0)
 
-        self.chart_image = ctk.CTkImage(
-            light_image=self.chart_source_image,
-            dark_image=self.chart_source_image,
-            size=(1000, 700)
-        )
+            self.chart_images.append(
+                Image.open(buffer).copy()
+            )
+
+            buffer.close()
+            figure.clear()
+
+        self.show_chart(0)
+
+        self.status_label.configure(text="Анализ FASTQ-файла завершён.")
+
+    def change_chart(self, direction: int) -> None:
+        """
+        Переключает отображаемый статистический график.
+
+        Parameters
+        ----------
+        direction : int
+            Направление переключения: -1 назад, 1 вперёд.
+        """
+        new_index = self.current_chart_index + direction
+
+        if 0 <= new_index < len(self.chart_images):
+            self.show_chart(new_index)
+
+    def show_chart(self, index: int) -> None:
+        """
+        Отображает график с указанным индексом.
+
+        Parameters
+        ----------
+        index : int
+            Индекс графика в списке изображений.
+        """
+        if not 0 <= index < len(self.chart_images):
+            return
+
+        self.current_chart_index = index
+        self.chart_source_image = self.chart_images[index]
+
+        if self.chart_image is None:
+            self.chart_image = ctk.CTkImage(
+                light_image=self.chart_source_image,
+                dark_image=self.chart_source_image,
+                size=(600, 330)
+            )
+        else:
+            self.chart_image.configure(
+                light_image=self.chart_source_image,
+                dark_image=self.chart_source_image
+            )
 
         self.chart_label.configure(image=self.chart_image)
         self.chart_label.configure(text="")
 
-        def resize_charts(event=None) -> None:
-            """
-            Масштабирует изображение с графиками при изменении размера окна.
+        self.chart_counter.configure(
+            text=f"{index + 1} / {len(self.chart_images)}"
+        )
 
-            Сохраняет исходные пропорции изображения и подбирает
-            максимальный размер графиков с учётом доступной области.
+        self.previous_button.configure(
+            state="normal" if index > 0 else "disabled"
+        )
 
-            Parameters
-            ----------
-            event : tkinter.Event, optional
-                Событие изменения размеров окна. Если не передано,
-                используются текущие размеры окна.
-            """
-            if event is not None and event.widget is not self.root:
-                return
-                
-            if self.chart_source_image is None or self.chart_image is None:
-                return
+        self.next_button.configure(
+            state="normal"
+            if index < len(self.chart_images) - 1
+            else "disabled"
+        )
 
-            available_width = self.root.winfo_width() - 60
+        self.root.after_idle(self.resize_charts)
 
-            chart_top = (
-                    self.chart_label.winfo_rooty()
-                    - self.root.winfo_rooty()
-            )
+    def resize_charts(self, event=None) -> None:
+        """
+        Масштабирует текущий график по доступной области окна.
 
-            available_height = self.root.winfo_height() - chart_top - 45
+        Сохраняет пропорции изображения и учитывает пространство,
+        необходимое для элементов интерфейса и кнопок навигации.
 
-            available_width = max(650, available_width)
-            available_height = max(450, available_height)
+        Parameters
+        ----------
+        event : tkinter.Event, optional
+            Событие изменения размеров окна.
+        """
+        if event is not None and event.widget is not self.root:
+            return
 
-            aspect_ratio = (
+        if self.chart_image is None or self.chart_source_image is None:
+            return
+
+        available_width = max(
+            1,
+            self.chart_label.winfo_width() - 20
+        )
+        available_height = max(
+            1,
+            self.chart_label.winfo_height() - 20
+        )
+
+        aspect_ratio = (
                 self.chart_source_image.width
                 / self.chart_source_image.height
-            )
+        )
 
-            new_width = min(
-                available_width,
-                int(available_height * aspect_ratio)
-            )
-            new_height = int(new_width / aspect_ratio)
+        new_width = min(
+            available_width,
+            int(available_height * aspect_ratio)
+        )
+        new_width = max(1, new_width)
 
-            if new_width > 0 and new_height > 0:
-                self.chart_image.configure(size=(new_width, new_height))
+        new_height = max(
+            1,
+            int(new_width / aspect_ratio)
+        )
 
-        self.root.bind("<Configure>", resize_charts)
-        self.root.after_idle(resize_charts)
-
-        self.status_label.configure(
-            text="Анализ FASTQ-файла завершён."
+        self.chart_image.configure(
+            size=(new_width, new_height)
         )
 
 
