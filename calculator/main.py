@@ -79,6 +79,7 @@ class Calculator:
         )
 
         self.buttons_frame.pack(pady=(0, 15))
+        # фиксирование размера контейнера
         self.buttons_frame.grid_propagate(False)
 
         for column in range(4):

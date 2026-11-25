@@ -24,6 +24,7 @@ def plot_sex_distribution(ax, patients) -> None:
 
     counts = [male_count, female_count]
 
+    # построение столбчатой диаграммы
     bars = ax.bar(
         ["Мужчины", "Женщины"],
         counts,
@@ -37,6 +38,7 @@ def plot_sex_distribution(ax, patients) -> None:
     ax.set_ylim(0, max(counts) * 1.15 if max(counts) > 0 else 1)
     ax.yaxis.set_major_locator(MaxNLocator(integer=True))
 
+    # добавление числовых значений над столбцами
     ax.bar_label(
         bars,
         padding=5,
@@ -64,6 +66,7 @@ def plot_age_distribution(ax, patients) -> None:
     """
     ages = [p.age for p in patients]
 
+    # построение гистограммы
     counts, _, _ = ax.hist(
         ages,
         bins=range(0, max(ages) + 20, 10),
@@ -105,6 +108,7 @@ def plot_bmi_by_sex(ax, patients) -> None:
 
     for patient in patients:
         x = 0 if patient.sex == "М" else 1
+        # добавление смещения точек для уменьшения наложения
         x += rng.uniform(-0.15, 0.15)
 
         color = "#78B7D0" if patient.sex == "М" else "#E9A7C0"

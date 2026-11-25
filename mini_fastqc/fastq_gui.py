@@ -138,15 +138,20 @@ def create_statistics_figure(
 
     Parameters
     ----------
-    statistics : dict
+    statistics: dict
         Результаты анализа FASTQ-файла.
-    chart_index : int
+    chart_index: int
         Индекс графика от 0 до 2.
 
     Returns
     -------
     matplotlib.figure.Figure
         Фигура с выбранным графиком.
+
+    Raises
+    ------
+    ValueError
+        Если индекс графика не находится в диапазоне от 0 до 2.
     """
     figure = Figure(figsize=(10, 5.5), dpi=150)
     ax = figure.add_subplot(111)
@@ -230,11 +235,11 @@ class FastQCApp:
 
     Attributes
     ----------
-    root : ctk.CTk
+    root: ctk.CTk
         Главное окно приложения.
-    selected_file : Path or None
+    selected_file: Path or None
         Путь к выбранному FASTQ-файлу.
-    result_queue : Queue
+    result_queue: Queue
         Очередь передачи результатов анализа в основной поток.
     """
 
@@ -244,7 +249,7 @@ class FastQCApp:
 
         Parameters
         ----------
-        root : ctk.CTk
+        root: ctk.CTk
             Главное окно приложения.
         """
         self.root = root
@@ -266,7 +271,14 @@ class FastQCApp:
         self.root.bind("<Configure>", self.resize_charts)
 
     def create_widgets(self) -> None:
-        """Создаёт основные элементы графического интерфейса."""
+        """
+        Создаёт и размещает элементы графического интерфейса.
+
+        Формирует заголовок приложения, область выбора FASTQ-файла,
+        строку состояния, карточки со сводной статистикой и область
+        отображения графиков. Добавляет кнопки переключения между
+        тремя графиками и счётчик текущего графика.
+        """
         self.content = ctk.CTkFrame(
             self.root,
             fg_color="transparent"
@@ -429,7 +441,16 @@ class FastQCApp:
         self.next_button.pack(side="left", padx=10)
 
     def select_file(self) -> None:
-        """Открывает диалог выбора FASTQ-файла и запускает анализ."""
+        """
+        Открывает диалог выбора FASTQ-файла.
+
+        Позволяет выбрать файл с расширением .fastq или .fq,
+        сохраняет путь к нему, обновляет название файла
+        в интерфейсе и запускает анализ.
+
+        Если пользователь отменяет выбор, функция завершает
+        работу без изменения текущего состояния приложения.
+        """
         filepath = filedialog.askopenfilename(
             parent=self.root,
             title="Выберите FASTQ-файл",
@@ -447,7 +468,17 @@ class FastQCApp:
         self.start_analysis()
 
     def start_analysis(self) -> None:
-        """Запускает обработку выбранного файла в отдельном потоке."""
+        """
+        Подготавливает интерфейс и запускает анализ FASTQ-файла.
+
+        Проверяет наличие выбранного файла и отсутствие другого
+        выполняющегося анализа. Сбрасывает предыдущие результаты,
+        очищает графики и временно отключает элементы управления.
+
+        Запускает обработку файла в отдельном потоке, чтобы
+        графический интерфейс оставался отзывчивым, и начинает
+        проверку очереди результатов.
+        """
         if self.selected_file is None or self.analyzing:
             return
 
@@ -485,7 +516,7 @@ class FastQCApp:
 
         Parameters
         ----------
-        filepath : Path
+        filepath: Path
             Путь к FASTQ-файлу.
         """
         try:
@@ -495,7 +526,17 @@ class FastQCApp:
             self.result_queue.put(("error", str(error)))
 
     def check_results(self) -> None:
-        """Проверяет очередь результатов и обновляет интерфейс."""
+        """
+        Проверяет очередь результатов фонового анализа.
+
+        Если результат ещё не получен, планирует повторную
+        проверку через 100 миллисекунд.
+
+        После завершения анализа восстанавливает доступность
+        кнопки выбора файла. При успешной обработке отображает
+        статистику и графики, а при ошибке выводит сообщение
+        с описанием возникшей проблемы.
+        """
         try:
             status, result = self.result_queue.get_nowait()
         except Empty:
@@ -532,7 +573,7 @@ class FastQCApp:
 
         Parameters
         ----------
-        statistics : dict
+        statistics: dict
             Результаты анализа FASTQ-файла.
         """
         values = {
@@ -569,7 +610,7 @@ class FastQCApp:
 
         Parameters
         ----------
-        direction : int
+        direction: int
             Направление переключения: -1 назад, 1 вперёд.
         """
         new_index = self.current_chart_index + direction
@@ -583,7 +624,7 @@ class FastQCApp:
 
         Parameters
         ----------
-        index : int
+        index: int
             Индекс графика в списке изображений.
         """
         if not 0 <= index < len(self.chart_images):
@@ -632,7 +673,7 @@ class FastQCApp:
 
         Parameters
         ----------
-        event : tkinter.Event, optional
+        event: tkinter.Event, optional
             Событие изменения размеров окна.
         """
         if event is not None and event.widget is not self.root:
@@ -672,7 +713,15 @@ class FastQCApp:
 
 
 def main() -> None:
-    """Создаёт главное окно и запускает Mini FastQC."""
+    """
+    Инициализирует и запускает графическое приложение Mini FastQC.
+
+    Устанавливает светлую тему CustomTkinter. Для Linux
+    выбирает способ отрисовки элементов интерфейса,
+    создаёт главное окно и экземпляр FastQCApp.
+
+    Запускает основной цикл обработки событий Tkinter.
+    """
     ctk.set_appearance_mode("light")
 
     if sys.platform.startswith("linux"):

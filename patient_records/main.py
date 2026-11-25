@@ -102,7 +102,7 @@ class PatientApp:
             sticky="w"
         )
 
-        # Панель управления
+        # панель управления
         toolbar = ctk.CTkFrame(
             self.root,
             fg_color="transparent"
@@ -309,10 +309,7 @@ class PatientApp:
         )
 
         # убирает стандартную рамку таблицы
-        style.layout(
-            "Patients.Treeview",
-            [("Treeview.treearea", {"sticky": "nswe"})]
-        )
+        style.layout("Patients.Treeview",[("Treeview.treearea", {"sticky": "nswe"})])
 
         # выделение строк
         style.map(
@@ -368,9 +365,7 @@ class PatientApp:
         self.form_window.title(
             "Редактирование пациента" if is_editing else "Добавление пациента"
         )
-        self.form_window.geometry(
-            "700x680" if IS_LINUX else "450x630"
-        )
+        self.form_window.geometry("450x600")
         self.form_window.resizable(False, False)
         self.form_window.configure(fg_color=BG_COLOR)
 
@@ -788,13 +783,26 @@ class PatientApp:
         )
 
         def resize_charts(event) -> None:
+            """
+            Масштабирует статистические графики при изменении размеров окна.
+
+            Определяет доступную область окна и пропорционально изменяет
+            размер изображения, сохраняя исходное соотношение сторон.
+            Ограничивает максимальную ширину изображения и предотвращает
+            масштабирование при недостаточных размерах окна.
+
+            Parameters
+            ----------
+            event : tkinter.Event
+                Событие изменения конфигурации окна, содержащее
+                его текущие размеры и ссылку на виджет.
+            """
             if event.widget is not window:
                 return
 
             available_width = event.width - 60
             available_height = event.height - 230
 
-            # Не изменяем изображение, пока окно слишком маленькое
             if available_width < 500 or available_height < 350:
                 return
 
